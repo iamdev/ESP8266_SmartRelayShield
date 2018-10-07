@@ -23,15 +23,15 @@
 #define PLATFORM_BLINK
 //#define PLATFORM_MQTT
 
-char blynk_auth[] = "21ec9d3b467140c29399bb549b71784f";
+char blynk_auth[] = "blynk_token";
 #define blynk_server "192.168.1.100"
 #define blynk_port 8080
 
 int button_delay = 50;
 
 int wifi_connection_timeout = 30000;
-const char* wifi_ssid = "kamon-dev";
-const char* wifi_password = "kamon123";
+const char* wifi_ssid = "wifi-ssid";
+const char* wifi_password = "wifi-pass";
 #define mqtt_server "192.168.1.100"
 #define mqtt_port 1883
 #define mqtt_user "TEST"
