@@ -3,7 +3,7 @@ Example code for MakeArduino-ESP8266 Smart-Relay Shield
 
 <b>edit all user config in config.h</b>
 -----------------------------
-<h3>Serial Command:<3>
+<h3>Serial Command:</h3>
 <ul>
 <li> D yyyy-mm-dd hh:mm:ss         -> Set Clock to RTC</li>
 <li> T HH:mm:ss                    -> Set Time to RTC</li>
@@ -13,5 +13,5 @@ Example code for MakeArduino-ESP8266 Smart-Relay Shield
 </ul>
 
 -----------------------------
-h file refernced document
-:TBD
+<h2>header file referenced document</h2>
+<i>to be continue</i>
