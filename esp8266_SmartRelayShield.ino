@@ -161,9 +161,9 @@ void loop() {
         dt.minute,            
         dt.second);
         lcd_setCursor(0,0);
-        lcd.print(date_str);
+        lcd_print(date_str);
         lcd_setCursor(0,1);
-        lcd.print(time_str);
+        lcd_print(time_str);
     if(ms > (t_read_rtc + 5000)){
         if(dt.second%5==0){
         Serial.print(date_str);
