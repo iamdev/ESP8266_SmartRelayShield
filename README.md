@@ -1,8 +1,8 @@
 # ESP8266_SmartRelayShield
 Example code for MakeArduino-ESP8266 Smart-Relay Shield
 
-<b>edit all user config in config.h</b>
------------------------------
+<b>Edit all user config in "config.h"</b>
+---
 <h3>Serial Command:</h3>
 <ul>
 <li> D yyyy-mm-dd hh:mm:ss         -> Set Clock to RTC</li>
@@ -12,6 +12,7 @@ Example code for MakeArduino-ESP8266 Smart-Relay Shield
 <li> A H hh:mm:ss                  -> Set Alarm to Toggle Relay 1 (alarm when match all Hour,Minute and Second)</li>
 </ul>
 
------------------------------
-<h2>header file referenced document</h2>
-<i>to be continue</i>
+<h2>Blynk Example</h2>
+<img src="./img/blynk_clone_40184036.png" style="width:10em"/>
+
+
