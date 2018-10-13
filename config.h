@@ -12,6 +12,9 @@
 #define LED_PIN             D4
 #define IO_INT_PIN          D3
 #define RTC_INT_PIN         D4
+#define I2C_SDA             D2
+#define I2C_SCL             D1
+#define BUTTON_PIN          D0
 
 #define RELAY_STAUS_DATA_ADDRESS  0
 
@@ -23,20 +26,21 @@
 #define PLATFORM_BLINK
 //#define PLATFORM_MQTT
 
-char blynk_auth[] = "21ec9d3b467140c29399bb549b71784f";
-#define blynk_server "192.168.1.100"
-#define blynk_port 8080
+char blynk_auth[] = "dec855c37605460096df97016b7130dd";
+#define blynk_server "blynk-cloud.com"
+#define blynk_port 80
 
 int button_delay = 50;
 
 int wifi_connection_timeout = 30000;
-const char* wifi_ssid = "kamon-dev";
-const char* wifi_password = "kamon123";
+const char* wifi_ssid = "ssid";
+const char* wifi_password = "pass";
+
+
 #define mqtt_server "192.168.1.100"
 #define mqtt_port 1883
 #define mqtt_user "TEST"
 #define mqtt_password "12345"
-
 #define MQTT_MAX_SUBSCRIBE 16
 
 #endif

@@ -112,7 +112,7 @@ void setAlarmRTC(const char * arg){
 
 void setup() {
     Serial.begin(115200);
-    Wire.begin(D2,D1);    
+    Wire.begin(I2C_SDA,I2C_SCL);    
     delay(500);    
     Serial.println("\n");
     blynk_init();

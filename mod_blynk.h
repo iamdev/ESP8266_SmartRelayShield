@@ -5,9 +5,9 @@
 
 bool blynk_initialized = false;
 void blynk_init(){
-  pinMode(D0,INPUT_PULLUP);
-  if(!digitalRead(D0)){
-    pinMode(LED_PIN,OUTPUT);
+  pinMode(LED_PIN,INPUT_PULLUP);
+  if(!digitalRead(BUTTON_PIN)){
+    pinMode(BUTTON_PIN,OUTPUT);
     digitalWrite(LED_PIN,LOW);    
     WiFi.mode(WIFI_STA); 
     int cnt = 0;
