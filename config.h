@@ -9,6 +9,7 @@
 #define DS3231_I2C_ADDR     0x68
 #define PCF8574_I2C_ALTADDR 0x18
 
+//WeMos D1mini use D4 as board LED / if NodeMcu use D0 instead
 #define LED_PIN             D4
 #define IO_INT_PIN          D3
 #define RTC_INT_PIN         D4
@@ -18,7 +19,7 @@
 
 #define RELAY_STAUS_DATA_ADDRESS  0
 
-#define HAS_LIQUID_CRYSTAL_LCD   1
+#define HAS_LIQUID_CRYSTAL_LCD   0
 #define LCD_ADDRESS         0x3F
 #define LCD_CHARS           16
 #define LCD_ROWS            2
