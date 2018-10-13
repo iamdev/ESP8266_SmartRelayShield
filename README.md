@@ -15,4 +15,7 @@ Example code for MakeArduino-ESP8266 Smart-Relay Shield
 <h2>Blynk Example</h2>
 <img src="./img/blynk_clone_40184036.png" width="150px"/>
 
+<h2>Board Schematic</h1>
+<img src="./img/Schematic_20181009202613.png"/>
+
 
