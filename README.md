@@ -13,6 +13,6 @@ Example code for MakeArduino-ESP8266 Smart-Relay Shield
 </ul>
 
 <h2>Blynk Example</h2>
-<img src="./img/blynk_clone_40184036.png" style="width:10em"/>
+<img src="./img/blynk_clone_40184036.png" width="150px"/>
 
 
