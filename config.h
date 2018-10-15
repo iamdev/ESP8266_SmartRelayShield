@@ -18,8 +18,9 @@
 #define BUTTON_PIN          D0
 
 #define RELAY_STAUS_DATA_ADDRESS  0
+#define ALARM_DATA_ADDRESS        1
 
-#define HAS_LIQUID_CRYSTAL_LCD   0
+#define HAS_LIQUID_CRYSTAL_LCD   1
 #define LCD_ADDRESS         0x3F
 #define LCD_CHARS           16
 #define LCD_ROWS            2
@@ -37,6 +38,7 @@ int wifi_connection_timeout = 30000;
 const char* wifi_ssid = "ssid";
 const char* wifi_password = "pass";
 
+const char * ntpServer = "pool.ntp.org";
 
 #define mqtt_server "192.168.1.100"
 #define mqtt_port 1883

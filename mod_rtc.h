@@ -269,7 +269,7 @@ struct ts_t rtc_parseStrDateTime(const char * str){
   dt.hour = buf[3];
   dt.minute = buf[4];
   dt.second = buf[5];
-  dt.wday = rtc_DayOfWeek(dt.year,dt.month,dt.day);
+  dt.wday = rtc_DayOfWeek(dt.year,dt.month,dt.day);  
   return dt;
 }
 
@@ -292,6 +292,7 @@ struct ts_t rtc_parseStrTime(const char * str){
 }
 
 void rtc_setDateTime(struct ts_t dt){
+  dt.wday = rtc_DayOfWeek(dt.year,dt.month,dt.day);
   DS3231_set(dt);
 }
 

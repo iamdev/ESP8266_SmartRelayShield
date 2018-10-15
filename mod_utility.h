@@ -32,6 +32,26 @@ void printDateTime(const ts_t &dt)
     Serial.print(datestring);
 }
 
+void printTime(const ts_t &dt)
+{
+    char datestring[32];
+    snprintf_P(datestring, 
+            countof(datestring),
+            PSTR("%02u:%02u:%02u"),
+            dt.hour,
+            dt.minute,
+            dt.second);
+    Serial.print(datestring);
+}
+
+struct ts_t secondToTimeStamp(long second){
+  struct ts_t ts;  
+  ts.hour = second/3600;
+  second %=3600;
+  ts.minute = second/60;
+  ts.second = second%60;   
+  return ts;  
+}
 
 
 #endif

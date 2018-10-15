@@ -1,5 +1,10 @@
-#include <Wire.h>
 #include "config.h"
+
+#include <Wire.h>
+#include <ESP8266WiFi.h>
+#include "mod_ntp.h"
+#include <BlynkSimpleEsp8266.h>
+
 #include "SerialCommand.h"
 #include "mod_rtc.h"
 #include "mod_utility.h"
@@ -7,14 +12,57 @@
 #include "mod_expand.h"    
 #include "mod_lcd.h"
 #include "mod_blynk.h"
-#include <ESP8266WiFi.h>
-#include <BlynkSimpleEsp8266.h>
-
 //#include "mod_mqtt.h"
+
+void update_relay_status(int n,int s);
 
 SerialCommand cmd(&Serial,256);
 
-alarm_t alarms[10];
+struct relay_alarm{
+  ts_t ts_on;
+  ts_t ts_off;
+  byte channel;
+  bool state;
+  bool active;
+}alarms[4];
+#define totalSeconds(ts) (ts.second+ts.minute*60+ts.hour*3600)
+
+int alarm_btn_vpin [] = {V6,V8,V10,V12};
+
+void save_alarm(int n){
+  long addr = ALARM_DATA_ADDRESS+(sizeof(relay_alarm)*n);
+  int data_size = sizeof(alarms[n]);
+  byte * data_ptr = (byte *)&(alarms[n]);
+  eeprom_write_object(addr,data_ptr,data_size);
+  Serial.print("Write alarm to EEPROM address ");
+  Serial.print(addr,DEC);
+  Serial.print(" for ");
+  Serial.print(data_size);
+  Serial.print("bytes : ");
+  for(int i=0;i<data_size;i++){
+    byte b = *(data_ptr+i);
+    if(b<0x10)Serial.print("0");
+    Serial.print(*(data_ptr+i),HEX);
+    Serial.print(" ");
+  }
+  Serial.println();
+}
+void load_alarm(){
+  Serial.println("Load Alarm Data");  
+  for(int i=0;i<4;i++){    
+    int data_size = sizeof(alarms[0]);
+    int data_addr = ALARM_DATA_ADDRESS + (i*data_size);
+    byte * data_ptr=(byte*)&(alarms[i]);
+    eeprom_read_object(data_addr,data_ptr,data_size);
+    for(int i=0;i<data_size;i++){      
+      byte b = *data_ptr++;
+      if(b<0x10)Serial.print("0");
+      Serial.print(b,HEX);
+      Serial.print(" ");
+    }
+    Serial.println();
+  }
+}
 
 void setDateTimeRTC(const char*arg){
   Serial.print("Set RTC :");
@@ -113,18 +161,37 @@ void setAlarmRTC(const char * arg){
 void setup() {
     Serial.begin(115200);
     Wire.begin(I2C_SDA,I2C_SCL);    
-    delay(500);    
+    delay(100);    
     Serial.println("\n");
-    blynk_init();
     rtc_init();
     exp_init();
-    lcd_init();
+    lcd_init();    
     //mqtt_init();
     //mqtt_subscribe("relay",sub_relay);
     cmd.registerCommand("D",setDateTimeRTC);
     cmd.registerCommand("T",setTimeRTC);    
     cmd.registerCommand("A",setAlarmRTC);
-    Serial.println("\n");
+    Serial.println("\n");    
+    load_alarm();
+    for(int i=1;i<=4;i++){      
+      update_relay_status(i,exp_out_state(i));
+    }
+
+    for(int i=0;i<4;i++){
+      Serial.print("Alarm ");
+      Serial.print(i+1);
+      Serial.print(" ");
+      printTime(alarms[i].ts_on);
+      Serial.print(" - ");
+      printTime(alarms[i].ts_off);
+      Serial.print(" : ");
+      int act = alarms[i].active ?1:0;
+      Serial.println(act? "Active":"Inactive");
+      Blynk.virtualWrite(alarm_btn_vpin[alarms[i].channel-1],act);
+    }
+    
+    blynk_init();
+    ntp_init();
 }    
 
 unsigned long t_read_rtc = 0;
@@ -132,15 +199,35 @@ unsigned long t_read_lcd_time = 0;
 
 void update_relay_status(int n,int s){
   lcd_setCursor(11+n,1);
-  lcd_print(s?"O":"X");
-  
+  lcd_print(s?"O":"-");  
+  if(s>=0){
+    switch(n){
+      case 1:
+        Blynk.virtualWrite(V1,s);
+        break;
+      case 2:
+        Blynk.virtualWrite(V2,s);
+        break;
+      case 3:
+        Blynk.virtualWrite(V3,s);
+        break;
+      case 4:
+        Blynk.virtualWrite(V4,s);
+        break;
+    }
+  }
 }
 
 bool btn[4];
 void loop() {
   exp_loop();
+  ntp_sync();
   cmd.read();  
   unsigned long ms = millis();
+  if(ms > (t_read_lcd_time + 900)){
+    lcd_setCursor(2,1);
+    lcd_print(" ");
+  }
   if(ms > (t_read_lcd_time + 1000)){
     struct ts_t dt = rtc_getDateTime();
     float tem = rtc_getTemp();
@@ -156,10 +243,9 @@ void loop() {
         dt.year);
     snprintf_P(time_str, 
         countof(time_str),
-        PSTR("%02u:%02u:%02u"),
+        PSTR("%02u:%02u"),
         dt.hour,
-        dt.minute,            
-        dt.second);
+        dt.minute);
         lcd_setCursor(0,0);
         lcd_print(date_str);
         lcd_setCursor(0,1);
@@ -173,13 +259,33 @@ void loop() {
         Serial.println(rtc_getTemp(),2);
         t_read_rtc = ms;
       }
-    }        
+    }
+
+    for(int i=0;i<4;i++){
+      if(alarms[i].active && totalSeconds(alarms[i].ts_on)!=totalSeconds(alarms[i].ts_off)){
+        if(!alarms[i].state && totalSeconds(dt)>totalSeconds(alarms[i].ts_on) && totalSeconds(dt)<totalSeconds(alarms[i].ts_off))
+        {
+          alarms[i].state = true;
+          exp_write(alarms[i].channel,1);
+          update_relay_status(alarms[i].channel,1);
+          save_alarm(i);
+        }else if(alarms[i].state && totalSeconds(dt)>totalSeconds(alarms[i].ts_off)){
+          exp_write(alarms[i].channel,0);
+          update_relay_status(alarms[i].channel,0);
+          alarms[i].state = false;
+          alarms[i].active = false;          
+          Blynk.virtualWrite(alarm_btn_vpin[alarms[i].channel-1],0);
+          save_alarm(i);
+        }
+      }
+    }
   }
   if(rtc_alarm ){
     Serial.println("Alarm!!!");
     exp_toggle(1);
     rtc_clear_alarm();
   }
+  
   for(int n=1;n<=4;n++){
     if(!btn[n-1] && exp_btn_pressed(n)>button_delay){
         Serial.print("Button ");
@@ -202,22 +308,6 @@ void loop() {
           Serial.print(" : ");
           Serial.println(s,BIN);
           update_relay_status(n,s);
-          if(s>=0){
-            switch(n){
-              case 1:
-                Blynk.virtualWrite(V1,s);
-                break;
-              case 2:
-                Blynk.virtualWrite(V2,s);
-                break;
-              case 3:
-                Blynk.virtualWrite(V3,s);
-                break;
-              case 4:
-                Blynk.virtualWrite(V4,s);
-                break;
-            }
-          }
         } 
         if(r>0)btn[n-1] = false;
     }
@@ -226,32 +316,96 @@ void loop() {
   if(blynk_initialized)Blynk.run();
 }
 
+/***************************/
+/* Blynk Virtual PIN handler */
+/***************************/
+void read_btn(int n,const BlynkParam& param){
+  int pinValue = param.asInt();
+  exp_write(n,pinValue==1);
+  update_relay_status(n,pinValue==1);
+}
+
+void set_alarm(int n,const BlynkParam& param){
+  ts_t startTime = secondToTimeStamp(param[0].asLong());
+  ts_t stopTime = secondToTimeStamp(param[1].asLong());
+  Serial.print("Set Alarm ");
+  Serial.print(n);
+  Serial.print(" : ");
+  printTime(startTime);
+  Serial.print(" to ");
+  printTime(stopTime);
+  alarms[n-1] = {startTime,stopTime,n,false,true};
+  Serial.println();
+  save_alarm(n-1);  
+}
+void toggle_alarm(int n,const BlynkParam& param){
+  alarms[n-1].active = param.asInt() != 0; 
+  Serial.print("Alarm "); 
+  Serial.print(n); 
+  Serial.println(alarms[n-1].active?":Active":":Inactive");
+  save_alarm(n-1);
+}
+
 BLYNK_WRITE(V1)
 {
-  int pinValue = param.asInt(); // assigning incoming value from pin V1 to a variable
-  exp_write(1,pinValue==1); 
-  update_relay_status(1,pinValue==1);
+  read_btn(1,param);
 }
 
 BLYNK_WRITE(V2)
 {
-  int pinValue = param.asInt(); // assigning incoming value from pin V1 to a variable
-  exp_write(2,pinValue==1);
-  update_relay_status(2,pinValue==1);
+  read_btn(2,param);
 }
 
 BLYNK_WRITE(V3)
 {
-  int pinValue = param.asInt(); // assigning incoming value from pin V1 to a variable
-  exp_write(3,pinValue==1);
-  update_relay_status(3,pinValue==1);
+  read_btn(3,param);
 }
 
 BLYNK_WRITE(V4)
 {
-  int pinValue = param.asInt(); // assigning incoming value from pin V1 to a variable
-  exp_write(4,pinValue==1);
-  update_relay_status(4,pinValue==1);
+  read_btn(4,param);
 }
 
+BLYNK_WRITE(V5)
+{
+  set_alarm(1,param);
+  Blynk.virtualWrite(V6,1);
+}
+
+BLYNK_WRITE(V6)
+{
+  toggle_alarm(1,param);
+}
+
+BLYNK_WRITE(V7)
+{
+  set_alarm(2,param);
+  Blynk.virtualWrite(V8,1);
+}
+
+BLYNK_WRITE(V8)
+{
+  toggle_alarm(2,param);
+}
+
+BLYNK_WRITE(V9)
+{
+  set_alarm(3,param);
+  Blynk.virtualWrite(V10,1);
+}
+
+BLYNK_WRITE(V10)
+{
+  toggle_alarm(3,param);
+}
+BLYNK_WRITE(V11)
+{
+  set_alarm(4,param);
+  Blynk.virtualWrite(V12,1);
+}
+
+BLYNK_WRITE(V12)
+{
+  toggle_alarm(4,param);
+}
 

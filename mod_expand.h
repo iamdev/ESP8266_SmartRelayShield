@@ -99,6 +99,12 @@ void exp_init(){
   Wire.endTransmission();      
 }
 
+bool exp_out_state(int n){
+  if(n<1 ||n>4)return false;
+  n--;
+  return ((~(bitout|0xF0))>>n)&0x1;
+}
+
 uint32_t t_exp_read;
 uint32_t t_exp_scan;
 void exp_loop(){  

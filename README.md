@@ -1,6 +1,14 @@
 # ESP8266_SmartRelayShield
 Example code for MakeArduino-ESP8266 Smart-Relay Shield
 
+<h2>Library Required</h2>
+<ul>
+
+<li type="disc"><a href="https://github.com/blynkkk/blynk-library" target="_blank">Blynk</a>
+<li type="disc"><a href="https://github.com/gmag11/NtpClient" target="_blank">NtpClientLib</a> by German Martin
+<li type="disc"><a href="https://github.com/marcoschwartz/LiquidCrystal_I2C" target="_blank">LiquidCrystal I2C</a> by Frank de Brabander 
+</ul>
+
 <b>Edit all user config in "config.h"</b>
 ---
 <h3>Serial Command:</h3>
